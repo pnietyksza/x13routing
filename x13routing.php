@@ -98,8 +98,6 @@ class X13routing extends Module
 
     protected function getConfigForm()
     {
-        dump($this->context->language->id,$this->context->controller->getLanguages());
-        exit;
         return [
             'form' => [
                 'legend' => [
