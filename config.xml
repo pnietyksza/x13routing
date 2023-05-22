@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+	<name>x13routing</name>
+	<displayName><![CDATA[routing module for x13]]></displayName>
+	<version><![CDATA[1.0.0]]></version>
+	<description><![CDATA[just for custom routes]]></description>
+	<author><![CDATA[P.N.]]></author>
+	<tab><![CDATA[administration]]></tab>
+	<is_configurable>1</is_configurable>
+	<need_instance>1</need_instance>
+</module>
