@@ -35,10 +35,19 @@ class X13routingdisplayModuleFrontController extends ModuleFrontController
     {
         parent::initContent();
 
-        $title = Configuration::get('input_title', null, null, null, 'Cześć X13');
-        $description = Configuration::get('input_description', null, null, null);
-        $this->context->smarty->assign('title', $title);
-        $this->context->smarty->assign('description', $description);
-        $this->setTemplate('module:x13routing/views/templates/front/display.tpl', [$title, $description]);
+        $languages = Language::getLanguages();
+        $title = [];
+        $description = [];
+
+        foreach ($languages as $language) {
+            $idLang = $language['id_lang'];
+            $title[$idLang] = Configuration::get("input_title_$idLang", null, null, null, 'Cześć X13');
+            $description[$idLang] = Configuration::get("input_description_$idLang", null, null, null);
+        }
+
+        $currentLanguage = $this->context->language->id;
+        $this->context->smarty->assign('title', $title[$currentLanguage]);
+        $this->context->smarty->assign('description', $description[$currentLanguage]);
+        $this->setTemplate('module:x13routing/views/templates/front/display.tpl');
     }
 }

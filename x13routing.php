@@ -44,7 +44,7 @@ class X13routing extends Module
         parent::__construct();
         $this->displayName = $this->l('routing module for x13');
         $this->description = $this->l('just for custom routes');
-        $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
+        $this->ps_versions_compliancy = ['min' => '1.6', 'max' => _PS_VERSION_];
     }
 
     public function install()
@@ -65,7 +65,7 @@ class X13routing extends Module
 
     public function getContent()
     {
-        if (((bool)Tools::isSubmit('submitX13routingModule')) == true) {
+        if (Tools::isSubmit('submitX13routingModule')) {
             $this->postProcess();
         }
 
@@ -87,44 +87,50 @@ class X13routing extends Module
         $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
             . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
         $helper->token = Tools::getAdminTokenLite('AdminModules');
-        $helper->tpl_vars = array(
+        $helper->tpl_vars = [
             'fields_value' => $this->getConfigFormValues(),
             'languages' => $this->context->controller->getLanguages(),
             'id_language' => $this->context->language->id,
-        );
+        ];
 
-        return $helper->generateForm(array($this->getConfigForm()));
+        return $helper->generateForm([$this->getConfigForm()]);
     }
 
     protected function getConfigForm()
     {
+        $languages = Language::getLanguages();
+        $fields = [];
+
+        foreach ($languages as $language) {
+            $idLang = $language['id_lang'];
+            $fields[] = [
+                'col' => 3,
+                'type' => 'text',
+                'name' => "input_title_$idLang",
+                'label' => $this->l('Title') . ' (' . $language['name'] . ')',
+            ];
+            $fields[] = [
+                'col' => 3,
+                'type' => 'text',
+                'name' => "input_description_$idLang",
+                'label' => $this->l('Description') . ' (' . $language['name'] . ')',
+            ];
+            $fields[] = [
+                'col' => 3,
+                'type' => 'text',
+                'desc' => $this->l('Enter URL'),
+                'name' => "input_url_$idLang",
+                'label' => $this->l('URL') . ' (' . $language['name'] . ')',
+            ];
+        }
+
         return [
             'form' => [
                 'legend' => [
                     'title' => $this->l('Settings'),
                     'icon' => 'icon-cogs',
                 ],
-                'input' => [
-                    [
-                        'col' => 3,
-                        'type' => 'text',
-                        'name' => 'input_title',
-                        'label' => $this->l('Title'),
-                    ],
-                    [
-                        'col' => 3,
-                        'type' => 'text',
-                        'name' => 'input_description',
-                        'label' => $this->l('Description'),
-                    ],
-                    [
-                        'col' => 3,
-                        'type' => 'text',
-                        'desc' => $this->l('Enter url'),
-                        'name' => 'input_url',
-                        'label' => $this->l('Url'),
-                    ],
-                ],
+                'input' => $fields,
                 'submit' => [
                     'title' => $this->l('Save'),
                 ],
@@ -134,27 +140,40 @@ class X13routing extends Module
 
     protected function getConfigFormValues()
     {
-        return array(
-            'input_title' => Configuration::get('input_title', null, null, null, 'Cześć X13'),
-            'input_description' => Configuration::get('input_description', null, null, null),
-            'input_url' => Configuration::get('input_url', null, null, null, 'czesc'),
-        );
+        $languages = Language::getLanguages();
+        $values = [];
+
+        foreach ($languages as $language) {
+            $idLang = $language['id_lang'];
+            $values["input_title_$idLang"] = Configuration::get("input_title_$idLang", null, null, null, 'Cześć X13');
+            $values["input_description_$idLang"] = Configuration::get("input_description_$idLang", null, null, null);
+            $values["input_url_$idLang"] = Configuration::get("input_url_$idLang", null, null, null, 'czesc');
+        }
+
+        return $values;
     }
 
     protected function postProcess()
     {
-        $form_values = $this->getConfigFormValues();
+        $languages = Language::getLanguages();
 
-        foreach (array_keys($form_values) as $key) {
-            Configuration::updateValue($key, Tools::getValue($key));
+        foreach ($languages as $language) {
+            $idLang = $language['id_lang'];
+            Configuration::updateValue("input_title_$idLang", Tools::getValue("input_title_$idLang"));
+            Configuration::updateValue("input_description_$idLang", Tools::getValue("input_description_$idLang"));
+            Configuration::updateValue("input_url_$idLang", Tools::getValue("input_url_$idLang"));
         }
     }
 
     public function hookModuleRoutes($params)
     {
-        $url = (string)Configuration::get('input_url', null, null, null, 'czesc');
-        return [
-            'X13routing' => [
+        $languages = Language::getLanguages();
+        $routes = [];
+
+        foreach ($languages as $language) {
+            $idLang = $language['id_lang'];
+            $url = Configuration::get("input_url_$idLang", null, null, null, 'czesc');
+            $route = [
                 'controller' => 'display',
                 'rule' => $url,
                 'keywords' => [
@@ -167,7 +186,10 @@ class X13routing extends Module
                     'fc' => 'module',
                     'module' => 'X13routing',
                 ]
-            ],
-        ];
+            ];
+            $routes["X13routing_$url_$idLang"] = $route;
+        }
+
+        return $routes;
     }
 }
